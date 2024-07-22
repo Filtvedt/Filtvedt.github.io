@@ -222,7 +222,7 @@
     }
 
     #board-background {
-        background-image: url("images/board_background.png");
+        background-image: url("../images/board_background.png");
     }
 
     div.board {
