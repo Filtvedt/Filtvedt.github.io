@@ -6,6 +6,7 @@
 
 <main>
   <div>
+    <h1>test</h1>
     <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
       <img src={viteLogo} class="logo" alt="Vite Logo" />
     </a>
