@@ -1,48 +1,90 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import { PlayerColor, type GameConfig } from "./lib/chess/types";
+  import { GameManager } from "./lib/chess/GameManager";
+  import Game from "./lib/chess/Game.svelte";
+  import { RandomMoveDelux } from "./lib/chess/AI/randomMoveDelux";
+  import { FirstMoveDelux } from "./lib/chess/AI/firstMoveDelux";
+  import { DrawScorer } from "./lib/chess/score/drawScorer";
+  import { BestAiV1 } from "./lib/chess/AI/bestAiV1";
+  import { BestEvaluatorV1 } from "./lib/chess/score/bestScorerV1";
+
+  let gameConfig: GameConfig = {
+    gameMode: {
+      type:"SinglePlayerVsAi",
+      playerColor: PlayerColor.WHITE,
+      algorithmOption: new BestAiV1(new BestEvaluatorV1()),
+      timeFormat: {
+        white: {
+          secondsIncrement: 0,
+          secondsStartTime: 300,
+        },
+        black: {
+          secondsIncrement: 0,
+          secondsStartTime: 600,
+        },
+      },
+    },
+    //FEN:"7k/5n2/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e3 0 1"
+    //FEN:"7k/QQ3n2/8/4P3/8/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+    //FEN: "4krn1/P1Pp1ppP/2pP1n2/PpqP4/2P1P3/2B5/PPQ2PPP/R3KBNR w KQq b5 3 12",
+    FEN: null,
+  };
+
+  let gameConfig1: GameConfig = {
+    gameMode: {
+      type:"SinglePlayerVsAi",
+      playerColor: PlayerColor.BLACK,
+      algorithmOption: new RandomMoveDelux(new DrawScorer()),
+      timeFormat: {
+        white: {
+          secondsIncrement: 0,
+          secondsStartTime: 300,
+        },
+        black: {
+          secondsIncrement: 0,
+          secondsStartTime: 600,
+        },
+      },
+    },
+    //FEN:"7k/5n2/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+    FEN:"7k/5n2/8/4P3/8/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+    //FEN: "4krn1/P1Pp1ppP/2pP1n2/PpqP4/2P1P3/2B5/PPQ2PPP/R3KBNR w KQq b5 3 12",
+    //FEN: null,
+  };
+
+  let gameConfig2: GameConfig = {
+    gameMode: {
+      type:"AiVsAi",
+      playerColor: PlayerColor.WHITE,
+      algorithmOptions: {
+        white:new RandomMoveDelux(new DrawScorer()),
+        black: new FirstMoveDelux(new DrawScorer())
+      },
+      timeFormat: {
+        white: {
+          secondsIncrement: 0,
+          secondsStartTime: 300,
+        },
+        black: {
+          secondsIncrement: 0,
+          secondsStartTime: 600,
+        },
+      },
+    },
+    //FEN:"r3k2r/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+    //FEN: "4krn1/P1Pp1ppP/2pP1n2/PpqP4/2P1P3/2B5/PPQ2PPP/R3KBNR w KQq b5 3 12",
+    FEN: null,
+  };
+
+  let gameManager = new GameManager(gameConfig);
+  let gameManager1 = new GameManager(gameConfig1);
+
 </script>
 
 <main>
-  <div>
-    <h1>test</h1>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
-  </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
+  <Game {gameManager} />
+  <!--  <Game gameManager={gameManager1} /> -->
 </main>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
 </style>
