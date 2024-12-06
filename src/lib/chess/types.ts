@@ -118,7 +118,10 @@ export type ThreefoldRepetitionPosition = {
     legalMoves:Move[]
 }
 
-export type AlgorithmOption = RandomMoveDelux | FirstMoveDelux
+export type AlgorithmOption = {
+    motor:AI,
+    depth:number
+}
 
 export interface BoardScorer {
     getScore:(chessGame:ChessGame, threefoldRepetitionStack:ThreefoldRepetitionEntry[], depth:number) => number

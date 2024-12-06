@@ -55,8 +55,15 @@ export const SCORE_INFINITY = 10000
 export const NEGATIVE_SCORE_INFINITY = -10000
 export const BLACK_CHECK_MATE_SCORE = -1000
 export const WHITE_CHECK_MATE_SCORE = 1000
-export const PAWN_CHAIN_SCORE = 0.6
-export const PAWN_ADVANCEMENT_SCORE = 0.05
+export const PAWN_CHAIN_SCORE = 0.06
+export const PAWN_ADVANCEMENT_SCORE = 0.09
+export const CENTRE_RING_CONTROL_SCORE = 0.04
+export const CENTRE_LEVEL_TWO_RING_CONTROL_SCORE = 0.02
+export const ATTACKING_SQUARE_SCORE=0.03
+export const ATTACKING_ENEMY_PIECE_MODIFIER = 0.01
+export const GIVE_CHECK_SCORE = 0.001
+export const DEFEND_SCORE = 0.02
+export const CASTLE_RIGHTS_SCORE = 0.01
 
 export const actionSorting = (moveA: Move, moveB: Move) => {
     if (moveA.to.piece && !moveB.to.piece) return -1

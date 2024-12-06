@@ -176,7 +176,7 @@ export class ChessGame {
     }
 
 
-    private getAttacksForPiece(square: Square): Attack[] {
+    getAttacksForPiece(square: Square): Attack[] {
         if (square.piece === null) return []
         const _square: NonNullableFields<Square> = square as NonNullableFields<Square>
         switch (square.piece.type) {

@@ -111,7 +111,7 @@ export class GameManager implements FenConverter<ChessGame> {
         if( this.checkShouldStopGame()) return
 
         if (this.gameConfig.gameMode.type === "SinglePlayerVsAi" && this.chessGame.playerTurn !== this.gameConfig.gameMode.playerColor && !this.result) {
-            const aiMove = await this.gameConfig.gameMode.algorithmOption.getMove(this.chessGame,this.threefoldRepetitionStack, 0, 3)
+            const aiMove = await this.gameConfig.gameMode.algorithmOption.motor.getMove(this.chessGame,this.threefoldRepetitionStack, 0, this.gameConfig.gameMode.algorithmOption.depth)
             this.makePreCheckedMove(aiMove)
                 this.checkShouldStopGame()
 
@@ -141,10 +141,10 @@ export class GameManager implements FenConverter<ChessGame> {
         if (this.gameConfig.gameMode.type != "AiVsAi") return
         if (this.checkShouldStopGame()) return
         if (this.chessGame.playerTurn === PlayerColor.WHITE) {
-            const whiteMove = await this.gameConfig.gameMode.algorithmOptions.white.getMove(this.chessGame,this.threefoldRepetitionStack, 0, 0)
+            const whiteMove = await this.gameConfig.gameMode.algorithmOptions.white.motor.getMove(this.chessGame,this.threefoldRepetitionStack, 0, this.gameConfig.gameMode.algorithmOptions.white.depth)
             this.makePreCheckedMove(whiteMove)
         } else {
-            const blackMove = await this.gameConfig.gameMode.algorithmOptions.black.getMove(this.chessGame,this.threefoldRepetitionStack, 0, 0)
+            const blackMove = await this.gameConfig.gameMode.algorithmOptions.black.motor.getMove(this.chessGame,this.threefoldRepetitionStack, 0, this.gameConfig.gameMode.algorithmOptions.black.depth)
             this.makePreCheckedMove(blackMove)
         }
         index += 1
