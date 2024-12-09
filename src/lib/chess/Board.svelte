@@ -42,7 +42,10 @@
     ): void => {
         const boardRect = target.parentElement?.getBoundingClientRect();
         if (!boardRect) return;
-        draggingPiece = target.id;
+        if(draggingPiece == null){
+            draggingPiece = target.id;
+
+        }
         const squareWidth = boardRect.width / CHESS_BOARD_SIZE;
         const squareHeight = boardRect.height / CHESS_BOARD_SIZE;
         const mouseX = event.clientX - (boardRect.left + squareWidth / 2);
@@ -53,6 +56,7 @@
 
     function mouseMove(event: MouseEvent) {
         if (draggingPiece) {
+
             let target: HTMLDivElement = event.target as HTMLDivElement;
             handleTranslatePiece(target, event);
         }
