@@ -44,7 +44,6 @@
         if (!boardRect) return;
         if(draggingPiece == null){
             draggingPiece = target.id;
-
         }
         const squareWidth = boardRect.width / CHESS_BOARD_SIZE;
         const squareHeight = boardRect.height / CHESS_BOARD_SIZE;
