@@ -176,6 +176,44 @@ export enum Result {
     DRAW_THREEFOLD_REPETITION="DRAW_THREEFOLD_REPETITION"
 }
 
+export type AiWorkerMessage = {
+    command:WorkerCommand.Start,
+    payload:{move:Move,topNode:Node,maxDepth:number,isMaximizingPlayer:boolean, index:number}
+} |{
+    command:WorkerCommand.UpdateAlpha,
+        payload:{alpha:number}
+}|{
+    command:WorkerCommand.UpdateBeta,
+    payload:{beta:number}
+}|
+{
+    command:WorkerCommand.Reset
+}
+
+export type AiWorkerResponse = {
+    type:AiWorkerResponseType.Complete,
+    payload:ScoredMove
+} | {
+    type:AiWorkerResponseType.Alpha,
+    payload:number
+} | {
+    type:AiWorkerResponseType.Beta,
+    payload:number
+}
+
+export enum AiWorkerResponseType {
+    Complete = 'Complete',
+    Alpha = 'Alpha',
+    Beta = 'Beta'
+}
+
+export enum WorkerCommand {
+    Start = 'Start',
+    UpdateAlpha = 'UpdateAlpha',
+    UpdateBeta = 'UpdateBeta',
+    Reset = 'Reset',
+}
+
 //GENERICS
 
 export type NonNullableFields<T> = {

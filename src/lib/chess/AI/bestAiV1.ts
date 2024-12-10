@@ -1,10 +1,17 @@
-import { takeABreakForTheUiToRunShallWe } from "../../utils/scheduler";
-import type { ChessGame } from "../ChessGame";
-import { NEGATIVE_SCORE_INFINITY, SCORE_INFINITY, actionSorting } from "../gameUtils";
-import { PlayerColor, type AI, type BoardScorer, type Move, type ScoredMove, type ThreefoldRepetitionEntry, type ThreefoldRepetitionPosition, type Node } from "../types";
-
-
-
+import {takeABreakForTheUiToRunShallWe} from "../../utils/scheduler";
+import type {ChessGame} from "../ChessGame";
+import {NEGATIVE_SCORE_INFINITY, SCORE_INFINITY, actionSorting} from "../gameUtils";
+import {
+    PlayerColor,
+    type AI,
+    type BoardScorer,
+    type Move,
+    type ScoredMove,
+    type ThreefoldRepetitionEntry,
+    type ThreefoldRepetitionPosition,
+    type Node,
+    type AiWorkerResponse, AiWorkerResponseType, WorkerCommand
+} from "../types";
 
 
 export class BestAiV1 implements AI {
@@ -18,28 +25,93 @@ export class BestAiV1 implements AI {
         this.evaluatedPositions = 0
     }
 
-    
-    async getMove(chessGame: ChessGame, threefoldRepetitionStack: ThreefoldRepetitionEntry[], remaningSeconds: number, maxDepth: number): Promise<Move> {
-        this.evaluatedPositions = 0
+    async getMove2(chessGame: ChessGame, threefoldRepetitionStack: ThreefoldRepetitionEntry[], remaningSeconds: number, maxDepth: number): Promise<Move> {
+        if (maxDepth <= 0) {
+            throw new Error("Max depth must be greater than 0")
+        }
         let alpha = NEGATIVE_SCORE_INFINITY
         let beta = SCORE_INFINITY
-        const topNode: Node = { chessGame: chessGame.clone(), threefoldRepetitionStack: JSON.parse(JSON.stringify(threefoldRepetitionStack)) }
-        const moveScore = await this.minMax(topNode, maxDepth, alpha, beta, topNode.chessGame.playerTurn != chessGame.playerTurn, maxDepth) as ScoredMove
+        const topNode: Node = {chessGame: chessGame.clone(), threefoldRepetitionStack: JSON.parse(JSON.stringify(threefoldRepetitionStack))}
+        const isMaximizingPlayer = topNode.chessGame.playerTurn === PlayerColor.WHITE
 
-        console.log("Evaluation complete! Alpha-Beta Pruning :" , this.skips ," Best found move:" , moveScore.move, "Total evaluated moves:" + this.evaluatedPositions )
+        const topNodeLegalMoves = topNode.chessGame.getLegalMoves().sort(actionSorting)
+        let workers = []
+        let responses: ScoredMove[] = []
+        console.log("topNode", topNode)
+        for (let [index, move] of topNodeLegalMoves.entries()) {
+            const worker = new Worker(new URL('./bestAIWorker.ts', import.meta.url), {
+                type: 'module'
+            })
+            worker.postMessage({command: WorkerCommand.Start, payload: {move, topNode, maxDepth, isMaximizingPlayer, index}})
+            worker.onmessage = (event: MessageEvent<AiWorkerResponse>) => {
+                switch (event.data.type) {
+                    case AiWorkerResponseType.Complete: {
+                        responses.push(event.data.payload)
+                        break;
+                    }
+                    case AiWorkerResponseType.Alpha:{
+                        alpha = event.data.payload
+                        worker.postMessage({command: WorkerCommand.UpdateAlpha, alpha})
+                        break
+                    }
+                    case AiWorkerResponseType.Beta:{
+                        beta = event.data.payload
+                        worker.postMessage({command: WorkerCommand.UpdateBeta, beta})
+                        break
+                    }
+                }
+            }
+            workers.push(worker)
+        }
 
-        return moveScore.move as Move
+        const waitForAllWorkers = new Promise<void>((resolve) => {
+            const check = () => {
+                if (responses.length === topNodeLegalMoves.length) {
+                    resolve()
+                } else {
+                    setTimeout(check, 100)
+                }
+            }
+            check()
+        })
+
+        await waitForAllWorkers
+
+        workers[0]?.postMessage({command: WorkerCommand.Reset})
+
+        workers.forEach(worker => worker.terminate())
+        // console.log("Evaluation complete! Alpha-Beta Pruning :" , this.skips ," Best found move:" , moveScore.move, "Total evaluated moves:" + this.evaluatedPositions )
+
+        console.log("Multi complete")
+        return responses.toSorted((a, b) => isMaximizingPlayer ? b.score - a.score : a.score - b.score)[0].move as Move
+
+        // return responses.toSorted((a,b) => isMaximizingPlayer ? b.score - a.score : a.score - b.score)[0].move as Move
+    }
+
+
+    async getMove(chessGame: ChessGame, threefoldRepetitionStack: ThreefoldRepetitionEntry[], remaningSeconds: number, maxDepth: number): Promise<Move> {
+
+        // this.evaluatedPositions = 0
+        // let alpha = NEGATIVE_SCORE_INFINITY
+        // let beta = SCORE_INFINITY
+        // const topNode: Node = { chessGame: chessGame.clone(), threefoldRepetitionStack: JSON.parse(JSON.stringify(threefoldRepetitionStack)) }
+        // const moveScore = await this.minMax(topNode, maxDepth, alpha, beta, topNode.chessGame.playerTurn != chessGame.playerTurn, maxDepth) as ScoredMove
+        //
+        // console.log("Evaluation complete! Alpha-Beta Pruning :" , this.skips ," Best found move:" , moveScore.move, "Total evaluated moves:" + this.evaluatedPositions )
+        //
+        // return moveScore.move as Move
+
+        return await this.getMove2(chessGame, threefoldRepetitionStack, remaningSeconds, maxDepth)
     }
 
 
     async minMax(node: Node, depth: number, alpha: number, beta: number, maximizingPlayer: boolean, maxDepth: number): Promise<number | ScoredMove> {
-        await takeABreakForTheUiToRunShallWe(); 
-       
+        await takeABreakForTheUiToRunShallWe();
+
         if (depth === 0 || node.chessGame.getLegalMoves().length === 0) {
             this.evaluatedPositions++
             return this.evalGame(node, depth === 0 ? (depth + 1) : depth)
         }
-
 
 
         if (maximizingPlayer) {
@@ -51,7 +123,7 @@ export class BestAiV1 implements AI {
                 const e = evaluation as ScoredMove
                 const moveScore = e.score ?? e
                 if (moveScore > maxEvaluation) bestMove = move
-                else if(moveScore == maxEvaluation) bestMove = (Math.floor(Math.random() * 2)) ? bestMove : move
+                else if (moveScore == maxEvaluation) bestMove = (Math.floor(Math.random() * 2)) ? bestMove : move
                 maxEvaluation = Math.max(maxEvaluation, moveScore)
                 alpha = Math.max(alpha, maxEvaluation)
                 if (beta <= alpha) {
@@ -62,7 +134,7 @@ export class BestAiV1 implements AI {
 
             }
 
-            return { score: maxEvaluation, move: bestMove }
+            return {score: maxEvaluation, move: bestMove}
         } else {
             let minEvaluation: number = SCORE_INFINITY
             let bestMove = null
@@ -72,7 +144,7 @@ export class BestAiV1 implements AI {
                 const e = evaluation as ScoredMove
                 const moveScore = e.score ?? e
                 if (moveScore < minEvaluation) bestMove = move
-                else if(moveScore == minEvaluation) bestMove = (Math.floor(Math.random() * 2)) ? bestMove : move
+                else if (moveScore == minEvaluation) bestMove = (Math.floor(Math.random() * 2)) ? bestMove : move
                 minEvaluation = Math.min(minEvaluation, moveScore)
                 beta = Math.min(beta, moveScore)
                 if (beta <= alpha) {
@@ -81,10 +153,9 @@ export class BestAiV1 implements AI {
                     break;
                 }
             }
-            return { score: minEvaluation, move: bestMove }
+            return {score: minEvaluation, move: bestMove}
         }
     }
-
 
 
     addSkips(depth: number, skips: number): void {
@@ -97,7 +168,6 @@ export class BestAiV1 implements AI {
     }
 
 
-
     evalGame(node: Node, depth: number): number {
         return this.boardScorer.getScore(node.chessGame, node.threefoldRepetitionStack, depth)
     }
@@ -107,7 +177,7 @@ export class BestAiV1 implements AI {
         let cloneStack: ThreefoldRepetitionEntry[] = JSON.parse(JSON.stringify(parrentNode.threefoldRepetitionStack))
         clone.makeMove(move)
         cloneStack = this.updateThreefoldRepetition(clone, cloneStack)
-        return { chessGame: clone, threefoldRepetitionStack: cloneStack }
+        return {chessGame: clone, threefoldRepetitionStack: cloneStack}
     }
 
     moveToString(move?: Move): string {
