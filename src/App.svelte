@@ -15,7 +15,7 @@
       playerColor: PlayerColor.WHITE,
       algorithmOption: {
         motor:new BestAiV1(new BestEvaluatorV1()),
-        depth:6
+        depth:1
       },
       timeFormat: {
         white: {

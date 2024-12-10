@@ -124,10 +124,10 @@ self.addEventListener("message", (e:MessageEvent<AiWorkerMessage>) => {
 
     switch (e.data.command){
         case WorkerCommand.Start:{
-            let {move,topNode,maxDepth, isMaximizingPlayer, index}:{move:Move,topNode:Node,maxDepth:number,isMaximizingPlayer:boolean, index:number} = e.data.payload
+            let {move,topNode,maxDepth, isMaximizingPlayer,legalMoves, index}:{move:Move,topNode:Node,maxDepth:number,isMaximizingPlayer:boolean,legalMoves: Move[], index:number} = e.data.payload
             console.log("Starting worker " + index + " to evaluate move", move)
 
-            topNode.chessGame = new ChessGame(topNode.chessGame.board,topNode.chessGame.playerTurn,topNode.chessGame.castleRights,topNode.chessGame.enPassant,topNode.chessGame.halfmoveClock,topNode.chessGame.fullmoveNumber,topNode.chessGame.attacks,topNode.chessGame.legalMoves)
+            topNode.chessGame = new ChessGame(topNode.chessGame.board,topNode.chessGame.playerTurn,topNode.chessGame.castleRights,topNode.chessGame.enPassant,topNode.chessGame.halfmoveClock,topNode.chessGame.fullmoveNumber,topNode.chessGame.attacks,legalMoves)
 
             const myThreadNode = asNode(topNode, move)
 
@@ -145,11 +145,11 @@ self.addEventListener("message", (e:MessageEvent<AiWorkerMessage>) => {
             break
         }
         case WorkerCommand.UpdateAlpha:{
-            alpha = e.data.payload.alpha
+            alpha = Math.max(e.data.payload.alpha, alpha)
             break
         }
         case WorkerCommand.UpdateBeta:{
-            beta = e.data.payload.beta
+            beta = Math.min(e.data.payload.beta, beta)
             break
         }
 

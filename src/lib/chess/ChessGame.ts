@@ -9,7 +9,7 @@ export class ChessGame {
     halfmoveClock: number
     fullmoveNumber: number
     attacks: PlayerOption<Attack[]>
-    legalMoves: Move[]
+    private legalMoves: Move[]
 
 
 

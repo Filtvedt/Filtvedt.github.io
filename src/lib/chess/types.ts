@@ -91,7 +91,7 @@ export type CasteTypes = {
 
 export type HitsoryEntry = {
     game:ChessGame,
-    move:Move | null 
+    move:Move | null
 }
 
 export type Attack = {
@@ -178,7 +178,7 @@ export enum Result {
 
 export type AiWorkerMessage = {
     command:WorkerCommand.Start,
-    payload:{move:Move,topNode:Node,maxDepth:number,isMaximizingPlayer:boolean, index:number}
+    payload:{move:Move,topNode:Node,maxDepth:number,isMaximizingPlayer:boolean, legalMoves: Move[], index:number}
 } |{
     command:WorkerCommand.UpdateAlpha,
         payload:{alpha:number}
